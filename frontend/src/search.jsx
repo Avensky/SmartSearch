@@ -16,7 +16,7 @@ export default function Search() {
 
         try {
             setStatus('Searching...');
-            const res = await axios.get('http://localhost:3001/api/search', {
+            const res = await axios.get('http://localhost:5001/api/search', {
                 params: { query },
             });
             setResults(res.data);
@@ -49,7 +49,13 @@ export default function Search() {
     }, []);
 
     return (
-        <div style={{ width: '100%', boxSizing: 'border-box' }}>
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            boxSizing: 'border-box',
+            width: '90%',
+            margin: '0 auto'
+        }}>
             <textarea
                 ref={textareaRef}
                 placeholder="Ask anything"

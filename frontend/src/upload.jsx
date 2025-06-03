@@ -16,7 +16,7 @@ export default function Upload({ onUploadComplete }) {
         formData.append('file', file);
 
         try {
-            await axios.post('http://localhost:3001/api/upload', formData);
+            await axios.post('http://localhost:5001/api/upload', formData);
             setStatus('Upload successful ✅');
             if (onUploadComplete) onUploadComplete();
         } catch (err) {
