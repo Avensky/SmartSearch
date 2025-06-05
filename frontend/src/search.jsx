@@ -4,7 +4,9 @@ import Upload from './upload';
 
 export default function Search() {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState([]);
+    const [answer, setAnswer] = useState([]);
+    const [type, setType] = useState();
+    const [chunks, setChunks] = useState();
     const [status, setStatus] = useState('');
     const textareaRef = useRef();
 
@@ -19,7 +21,15 @@ export default function Search() {
             const res = await axios.get('http://localhost:5001/api/search', {
                 params: { query },
             });
-            setResults(res.data);
+            const { type, results = [], answer = '' } = res.data || {};
+
+            setType(type);
+            setChunks(results);
+            setAnswer(answer);
+
+
+            // setResults(res.data);
+            // setResults(Array.isArray(res.data) ? res.data : []);
             setStatus(res.data.length ? '' : 'No results found.');
         } catch (err) {
             setStatus(`Search failed: ${err.message}`);
@@ -82,13 +92,20 @@ export default function Search() {
             </div>
             <p>{status}</p>
             <ul>
-                {results.map((res, i) => (
-                    <li key={i} style={{ marginBottom: '1em' }}>
+                {type === 'chunks' && Array.isArray(chunks) && chunks.map((res, i) => (
+                    <li key={i}>
                         <strong>{res.filename}</strong><br />
-                        <em>{res.snippet}...</em><br />
-                        <small>Relevance: {res.score.toFixed(2)}</small>
+                        <em>{res.snippet}</em><br />
+                        <small>Relevance score: {res.score.toFixed(2)}</small>
                     </li>
                 ))}
+
+                {type === 'llm' && (
+                    <div style={{ whiteSpace: 'pre-wrap', marginTop: '1em' }}>
+                        <strong>AI Answer:</strong><br />
+                        {answer}
+                    </div>
+                )}
             </ul>
         </div>
     );

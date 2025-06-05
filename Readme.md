@@ -98,3 +98,14 @@ npm run dev
 
 ## 📜 License
 MIT
+
+<!-- 
+
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\\Scripts\\activate
+source venv/bin/activate
+uvicorn search:app --reload --port 8000
+python3 init_db.py 
+http://localhost:8000/docs
+
+-->

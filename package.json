@@ -9,7 +9,8 @@
         "start": "node server.js",
         "server": "nodemon server.js",
         "frontend": "npm run dev --prefix ./frontend",
-        "dev": "concurrently \"npm run server\" \"npm run frontend\""
+        "dev": "concurrently \"npm run server\" \"npm run frontend\" \"npm run lib\"",
+        "lib": "uvicorn search:app --reload --port 8000"
     },
     "dependencies": {
         "axios": "^1.9.0",

@@ -2,9 +2,7 @@ import faiss
 import sqlite3
 import os
 
-FAISS_PATH = "semantic.index"
-DB_PATH = "metadata.db"
-EMBEDDING_DIM = 384
+from config import FAISS_PATH, DB_PATH, EMBEDDING_DIM
 
 # Create or reset FAISS index
 index = faiss.IndexFlatL2(EMBEDDING_DIM)
@@ -20,8 +18,11 @@ c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS chunks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     filename TEXT,
+    filehash TEXT,
     chunk TEXT
 )''')
+c.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_filehash_chunk ON chunks(filehash, chunk)')
+
 conn.commit()
 conn.close()
 print(f"✅ SQLite database initialized and saved to '{DB_PATH}'")
