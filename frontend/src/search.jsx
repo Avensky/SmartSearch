@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import Upload from './upload';
+import UploadDirectory from './uploadDir';
 
 export default function Search() {
     const [query, setQuery] = useState('');
@@ -8,6 +9,7 @@ export default function Search() {
     const [type, setType] = useState();
     const [chunks, setChunks] = useState();
     const [status, setStatus] = useState('');
+    const [uploadMode, setUploadMode] = useState('single'); // 'single' or 'directory'
     const textareaRef = useRef();
 
     const handleSearch = async () => {
@@ -81,16 +83,29 @@ export default function Search() {
                     lineHeight: '1.5',
                 }}
             />
-            <div className='bar'>
-                <Upload />
-                <button
-                    className='button'
-                    onClick={handleSearch}
-                    style={{ display: 'block' }}>
+
+            <div className='bar' style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
+                <select style={{
+                    width: '100',
+                    padding: '8px',
+                    resize: 'none',
+                    overflow: 'hidden',
+                    lineHeight: '1.5',
+                }}
+                    value={uploadMode} onChange={(e) => setUploadMode(e.target.value)}>
+                    <option value="single">Single PDF</option>
+                    <option value="directory">Directory</option>
+                </select>
+
+                {uploadMode === 'single' ? <Upload /> : <UploadDirectory />}
+
+                <button onClick={handleSearch} className='button'>
                     Search
                 </button>
             </div>
+
             <p>{status}</p>
+
             <ul>
                 {type === 'chunks' && Array.isArray(chunks) && chunks.map((res, i) => (
                     <li key={i}>
@@ -99,7 +114,6 @@ export default function Search() {
                         <small>Relevance score: {res.score.toFixed(2)}</small>
                     </li>
                 ))}
-
                 {type === 'llm' && (
                     <div style={{ whiteSpace: 'pre-wrap', marginTop: '1em' }}>
                         <strong>AI Answer:</strong><br />

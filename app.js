@@ -29,6 +29,22 @@ function setupExpress(app) {
         }
     });
 
+    app.post('/api/upload-directory', upload.array('files'), async (req, res) => {
+        const form = new FormData();
+        req.files.forEach(file => {
+            form.append('files', fs.createReadStream(file.path), file.originalname);
+        });
+
+        try {
+            const response = await axios.post('http://localhost:8000/upload_dir', form, {
+                headers: form.getHeaders(),
+            });
+            res.send(response.data);
+        } catch (err) {
+            res.status(500).send(err.message);
+        }
+    });
+
     app.get('/api/search', async (req, res) => {
         try {
             const response = await axios.get('http://localhost:8000/search', {

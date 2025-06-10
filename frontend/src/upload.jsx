@@ -30,7 +30,6 @@ export default function Upload({ onUploadComplete }) {
                 type="file"
                 accept="application/pdf"
                 onChange={handleFileChange}
-            // style={{ display: 'inline-block' }}
             />
             <p style={{ margin: 0, fontSize: '0.9em' }}>{status}</p>
         </div>

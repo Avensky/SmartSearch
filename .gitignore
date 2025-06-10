@@ -4,4 +4,5 @@ venv
 semantic.index
 uploads
 __pycache__
-metadata
+metadata.db
+docs

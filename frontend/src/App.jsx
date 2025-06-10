@@ -6,9 +6,7 @@ function App() {
   return (
     <>
       <div>
-
         <img src={niwcLogo} className="logo" alt="Niwc Pacific logo" />
-
       </div>
       <h1>What's on your mind today?</h1>
       <Search />

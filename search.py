@@ -1,5 +1,6 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException, APIRouter, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sentence_transformers import SentenceTransformer
 from pdfminer.high_level import extract_text
 from llm import ask_llm
@@ -11,7 +12,14 @@ import numpy as np
 from config import FAISS_PATH, DB_PATH, EMBEDDING_DIM
 from utils import compute_file_hash
 from pydantic import BaseModel
+import shutil
+import hashlib
+from typing import List
+from uuid import uuid4
+from pathlib import Path
+from flask import request, jsonify
 
+UPLOAD_ROOT = "docs"
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -45,14 +53,11 @@ def chunk_text(text, chunk_size=300, overlap=50):
 
 
 
-class UploadDirRequest(BaseModel):
-    path: str
-
 @app.post("/upload_dir")
-def upload_directory(data: UploadDirRequest):
-    directory = data.path
-    if not os.path.isdir(directory):
-        raise HTTPException(status_code=400, detail=f"Invalid directory: {directory}")
+async def upload_directory(files: List[UploadFile] = File(...)):
+    # directory = data.path
+    # if not os.path.isdir(directory):
+    #     raise HTTPException(status_code=400, detail=f"Invalid directory: {directory}")
 
     model = SentenceTransformer("all-MiniLM-L6-v2")
     index = faiss.read_index(FAISS_PATH)
@@ -61,34 +66,46 @@ def upload_directory(data: UploadDirRequest):
 
     added_files = 0
 
-    for root, _, files in os.walk(directory):
-        for file in files:
-            if not file.lower().endswith(".pdf"):
-                continue
+    # for root, _, files in os.walk(directory):
+    #     for file in files:
+    #         if not file.lower().endswith(".pdf"):
+    #             continue
+    #         file_path = os.path.join(root, file)
+    for uploaded_file in files:
+        if not uploaded_file.filename.lower().endswith(".pdf"):
+            continue
 
-            file_path = os.path.join(root, file)
-            filehash = compute_file_hash(file_path)
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                tmp.write(await uploaded_file.read())
+                tmp.flush()
+                file_path = tmp.name
+                
+                filehash = compute_file_hash(file_path)
 
-            # Skip if file already exists
-            cursor.execute("SELECT 1 FROM chunks WHERE filehash = ?", (filehash,))
-            if cursor.fetchone():
-                continue
+                # Skip if file already exists
+                cursor.execute("SELECT 1 FROM chunks WHERE filehash = ?", (filehash,))
+                if cursor.fetchone():
+                    continue
 
-            try:
+            # try:
                 text = extract_text(file_path)
                 chunks = [text[i:i+500] for i in range(0, len(text), 500)]
                 embeddings = model.encode(chunks)
 
                 for chunk, vec in zip(chunks, embeddings):
+                    # cursor.execute("INSERT INTO chunks (filename, filehash, chunk) VALUES (?, ?, ?)",
+                    #                (os.path.basename(file_path), filehash, chunk))
                     cursor.execute("INSERT INTO chunks (filename, filehash, chunk) VALUES (?, ?, ?)",
-                                   (os.path.basename(file_path), filehash, chunk))
+                                    (uploaded_file.filename, filehash, chunk))
                     index.add(np.array([vec]).astype("float32"))
 
                 added_files += 1
-                print(f"✅ Indexed: {file_path}")
+                # print(f"✅ Indexed: {file_path}")
+                print(f"✅ Indexed: {uploaded_file.filename}")
 
-            except Exception as e:
-                print(f"❌ Failed to process {file_path}: {e}")
+        except Exception as e:
+            print(f"❌ Failed to process {file_path}: {e}")
 
     conn.commit()
     faiss.write_index(index, FAISS_PATH)
@@ -113,7 +130,6 @@ async def upload(file: UploadFile):
     faiss.write_index(index, FAISS_PATH)
 
     return {"message": f"{file.filename} uploaded and embedded", "chunks": len(chunks)}
-from fastapi.responses import JSONResponse
 
 @app.get("/search")
 def search(query: str):

@@ -5,10 +5,8 @@ from pdfminer.high_level import extract_text
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
+from config import FAISS_PATH, DB_PATH, EMBEDDING_DIM
 
-EMBEDDING_DIM = 384
-FAISS_PATH = "semantic.index"
-DB_PATH = "metadata.db"
 PDF_DIR = "docs"
 
 # Load model and index

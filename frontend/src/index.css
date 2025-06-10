@@ -60,6 +60,7 @@ h1 {
 .bar {
   display: flex;
   justify-content: space-between;
+  overflow: hidden;
 }
 
 @media (prefers-color-scheme: light) {
